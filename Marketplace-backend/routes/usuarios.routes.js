@@ -51,7 +51,24 @@ router.post(
     verificarAdministrador,
     usuariosController.crearUsuario
 );
+console.log(
+    "CONTROLADOR:",
+    usuariosController
+);
+
+console.log(
+    "CAMBIAR ESTADO:",
+    usuariosController.cambiarEstado
+);
+router.put(
+    '/:id/estado',
+    verificarAdministrador,
+    usuariosController.cambiarEstado
+);
 
 
+// CAMBIAR ESTADO USUARIO
 // MUY IMPORTANTE
 module.exports = router;
+
+

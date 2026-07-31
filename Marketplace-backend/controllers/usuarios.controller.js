@@ -524,4 +524,62 @@ exports.cambiarPassword = (
         }
     );
 
+// =====================================================
+// ACTIVAR / DESACTIVAR USUARIO
+// =====================================================
+// =====================================================
+// CAMBIAR ESTADO DEL USUARIO
+// =====================================================
+
+exports.cambiarEstado = (
+    req,
+    res
+) => {
+
+    const usuarioId =
+        req.params.id;
+
+
+    const activo =
+        req.body.activo;
+
+
+    if (activo === undefined) {
+
+        return res.status(400).json({
+            mensaje:
+                "Debe enviar activo"
+        });
+
+    }
+
+
+    Usuario.cambiarEstado(
+        usuarioId,
+        activo,
+        (
+            error
+        ) => {
+
+            if (error) {
+
+                console.error(error);
+
+                return res.status(500).json({
+                    mensaje:
+                        "Error actualizando estado"
+                });
+
+            }
+
+
+            res.json({
+                mensaje:
+                    "Estado actualizado correctamente"
+            });
+
+        }
+    );
+
+};
 };

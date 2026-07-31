@@ -1011,7 +1011,7 @@ function obtenerImagen(usuario) {
 
   const baseUrl =
     import.meta.env.VITE_API_URL ||
-    'http://localhost:3000';
+    'http://54.157.69.153:3000';
 
   const ruta =
     imagen.startsWith('/')

@@ -1744,7 +1744,7 @@ function obtenerImagen(producto) {
       : `/${rutaLimpia}`;
 
 
-  return `http://localhost:3000${ruta}`;
+  return http://54.157.69.153:3000${ruta};
 
 }
 

@@ -5,7 +5,7 @@ const api = axios.create({
 
   baseURL:
     import.meta.env.VITE_API_URL ||
-    'http://localhost:3000',
+    'http://54.157.69.153:3000',
 
   timeout: 15000,
 

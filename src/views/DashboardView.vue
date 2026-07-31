@@ -93,33 +93,6 @@
 
         </div>
       </article>
-
-
-      <!-- CONVERSACIONES -->
-      <article
-        class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-      >
-        <div class="flex items-center justify-between">
-
-          <div>
-            <p class="text-sm font-medium text-slate-500">
-              Conversaciones
-            </p>
-
-            <strong class="mt-2 block text-3xl font-bold text-slate-800">
-              0
-            </strong>
-          </div>
-
-          <div
-            class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600"
-          >
-            <MessageCircle :size="24" />
-          </div>
-
-        </div>
-      </article>
-
     </div>
 
   </section>

@@ -232,4 +232,32 @@ const Usuario = {
 
 };
 
+
+// =====================================================
+// CAMBIAR ESTADO ACTIVO DEL USUARIO
+// =====================================================
+
+cambiarEstado: (
+    usuarioId,
+    activo,
+    resultado
+) => {
+
+    const sql = `
+        UPDATE usuarios
+        SET activo = ?
+        WHERE id = ?
+    `;
+
+
+    conexion.query(
+        sql,
+        [
+            activo,
+            usuarioId
+        ],
+        resultado
+    );
+
+}
 module.exports = Usuario;
