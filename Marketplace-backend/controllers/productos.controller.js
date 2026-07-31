@@ -57,6 +57,7 @@ exports.crearProducto = (req, res) => {
         req.file
     );
 
+
     const {
         nombre,
         descripcion,
@@ -66,6 +67,7 @@ exports.crearProducto = (req, res) => {
         categoria_id,
         usuario_id
     } = req.body;
+
 
 
     // =================================================
@@ -78,18 +80,21 @@ exports.crearProducto = (req, res) => {
         !ubicacion ||
         precio === undefined ||
         stock === undefined ||
-        !categoria_id ||
-        !usuario_id
+        !categoria_id
     ) {
 
         return res.status(400).json({
 
             mensaje:
-                'Todos los campos son obligatorios'
+                'Faltan campos obligatorios',
+
+            recibido:
+                req.body
 
         });
 
     }
+
 
 
     // =================================================
@@ -112,8 +117,10 @@ exports.crearProducto = (req, res) => {
         Number(categoria_id);
 
 
+
     const usuarioIdNumero =
         Number(usuario_id);
+
 
 
     // =================================================
@@ -135,6 +142,7 @@ exports.crearProducto = (req, res) => {
     }
 
 
+
     // =================================================
     // VALIDAR STOCK
     // =================================================
@@ -154,8 +162,9 @@ exports.crearProducto = (req, res) => {
     }
 
 
+
     // =================================================
-    // VALIDAR CATEGORÍA
+    // VALIDAR CATEGORIA
     // =================================================
 
     if (
@@ -171,6 +180,7 @@ exports.crearProducto = (req, res) => {
         });
 
     }
+
 
 
     // =================================================
@@ -192,47 +202,60 @@ exports.crearProducto = (req, res) => {
     }
 
 
+
     // =================================================
     // CREAR OBJETO PRODUCTO
     // =================================================
 
-    const producto = {
+const producto = {
 
-        nombre:
-            nombre.trim(),
+    nombre:
+        nombre.trim(),
 
-        descripcion:
-            descripcion.trim(),
+    descripcion:
+        descripcion.trim(),
 
-        ubicacion: ubicacion.trim(),
+    ubicacion:
+        ubicacion.trim(),
 
-        precio:
-            precioNumero,
+    precio:
+        precioNumero,
 
-        stock:
-            stockNumero,
+    stock:
+        stockNumero,
 
-        categoria_id:
-            categoriaIdNumero,
+    categoria_id:
+        categoriaIdNumero,
 
-        usuario_id:
-            usuarioIdNumero,
+    usuario_id:
+        usuarioIdNumero,
 
-        imagen:
-            req.file
-                ? `/uploads/${req.file.filename}`
-                : null
+    imagen:
+        req.file
+            ? `/uploads/${req.file.filename}`
+            : null
 
-    };
+};
+
+
+
+    console.log(
+        'PRODUCTO A GUARDAR:',
+        producto
+    );
+
 
 
     // =================================================
-    // GUARDAR PRODUCTO
+    // GUARDAR
     // =================================================
 
     Producto.crear(
+
         producto,
+
         (error, resultado) => {
+
 
             if (error) {
 
@@ -240,6 +263,7 @@ exports.crearProducto = (req, res) => {
                     'Error creando producto:',
                     error
                 );
+
 
                 return res.status(500).json({
 
@@ -252,6 +276,8 @@ exports.crearProducto = (req, res) => {
                 });
 
             }
+
+
 
             return res.status(201).json({
 
@@ -266,11 +292,13 @@ exports.crearProducto = (req, res) => {
 
             });
 
+
         }
+
     );
 
-};
 
+};
 
 // =====================================================
 // PRODUCTOS POR USUARIO
@@ -523,27 +551,33 @@ exports.actualizarProducto = (req, res) => {
 
     const producto = {
 
-        nombre:
-            nombre.trim(),
+    nombre:
+        nombre.trim(),
 
-        descripcion:
-            descripcion.trim(),
+    descripcion:
+        descripcion.trim(),
 
-        ubicacion: ubicacion.trim(),
+    ubicacion:
+        ubicacion.trim(),
 
-        precio:
-            precioNumero,
+    precio:
+        precioNumero,
 
-        stock:
-            stockNumero,
+    stock:
+        stockNumero,
 
-        categoria_id:
-            categoriaIdNumero,
+    categoria_id:
+        categoriaIdNumero,
 
-        usuario_id:
-            usuarioIdNumero
+    usuario_id:
+        usuarioIdNumero,
 
-    };
+    imagen:
+        req.file
+            ? `/uploads/${req.file.filename}`
+            : null
+
+};
 
 
     // =================================================

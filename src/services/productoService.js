@@ -1,4 +1,3 @@
-
 import api from './api.js';
 
 
@@ -38,36 +37,13 @@ const productoService = {
 
 
         const response =
-            await fetch(
-                'http://localhost:3000/productos',
-                {
-                    method: 'POST',
-
-                    body: formData
-                }
+            await api.post(
+                '/productos',
+                formData
             );
 
 
-        const resultado =
-            await response.json();
-
-
-        if (
-            !response.ok
-        ) {
-
-            throw new Error(
-
-                resultado.mensaje ||
-
-                'No se pudo crear el producto'
-
-            );
-
-        }
-
-
-        return resultado;
+        return response.data;
 
     },
 
@@ -79,16 +55,24 @@ const productoService = {
 
     async actualizarProducto(
         id,
-        producto
+        formData
     ) {
+
+        if (
+            !(formData instanceof FormData)
+        ) {
+
+            throw new Error(
+                'actualizarProducto debe recibir un FormData'
+            );
+
+        }
+
 
         const response =
             await api.put(
-
                 `/productos/${id}`,
-
-                producto
-
+                formData
             );
 
 
@@ -109,18 +93,13 @@ const productoService = {
 
         const response =
             await api.delete(
-
                 `/productos/${productoId}`,
-
                 {
                     data: {
-
                         usuario_id:
                             usuarioId
-
                     }
                 }
-
             );
 
 
@@ -136,16 +115,24 @@ const productoService = {
 
     async actualizarProductoAdmin(
         id,
-        producto
+        formData
     ) {
+
+        if (
+            !(formData instanceof FormData)
+        ) {
+
+            throw new Error(
+                'actualizarProductoAdmin debe recibir un FormData'
+            );
+
+        }
+
 
         const response =
             await api.put(
-
                 `/productos/admin/${id}`,
-
-                producto
-
+                formData
             );
 
 
@@ -165,9 +152,7 @@ const productoService = {
 
         const response =
             await api.delete(
-
                 `/productos/admin/${id}`
-
             );
 
 
@@ -179,4 +164,3 @@ const productoService = {
 
 
 export default productoService;
-     

@@ -502,6 +502,23 @@
 
           </div>
 
+          <!-- UBICACIÓN -->
+
+<div>
+
+  <label class="mb-2 block text-sm font-semibold text-slate-700">
+    Ubicación
+  </label>
+
+  <input
+    v-model.trim="formulario.ubicacion"
+    type="text"
+    placeholder="Ejemplo: Lima, Perú"
+    class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+  />
+
+</div>
+
 
           <!-- PRECIO / STOCK -->
 
@@ -596,11 +613,42 @@
 
           <!-- IMAGEN -->
 
-          <div v-if="!modoEdicion">
+          <div>
 
             <label class="mb-2 block text-sm font-semibold text-slate-700">
-              Imagen del producto
+              {{ modoEdicion ? 'Cambiar imagen del producto' : 'Imagen del producto' }}
             </label>
+
+            <div
+              v-if="modoEdicion && formulario.imagen && !vistaPreviaImagen"
+              class="mb-4"
+            >
+              <p class="mb-2 text-xs font-semibold text-slate-500">
+                Imagen actual
+              </p>
+
+              <img
+                :src="obtenerImagen({ imagen: formulario.imagen })"
+                alt="Imagen actual"
+                class="h-40 w-full rounded-xl border border-slate-200 object-cover"
+                @error="ocultarImagen"
+              />
+            </div>
+
+            <div
+              v-if="vistaPreviaImagen"
+              class="mb-4"
+            >
+              <p class="mb-2 text-xs font-semibold text-slate-500">
+                Nueva imagen seleccionada
+              </p>
+
+              <img
+                :src="vistaPreviaImagen"
+                alt="Vista previa de la nueva imagen"
+                class="h-40 w-full rounded-xl border border-blue-200 object-cover"
+              />
+            </div>
 
             <label
               class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 transition hover:border-blue-400 hover:bg-blue-50"
@@ -612,16 +660,16 @@
               />
 
               <span class="mt-2 text-sm font-semibold text-slate-600">
-                Seleccionar imagen
+                {{ modoEdicion ? 'Seleccionar nueva imagen' : 'Seleccionar imagen' }}
               </span>
 
               <span class="mt-1 text-xs text-slate-400">
-                PNG, JPG o JPEG
+                PNG, JPG, JPEG o WEBP · máximo 5 MB
               </span>
 
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/jpeg,image/png,image/webp"
                 @change="seleccionarImagen"
                 class="hidden"
               />
@@ -760,6 +808,8 @@ const productoSeleccionadoId = ref(null);
 
 const imagenSeleccionada = ref(null);
 
+const vistaPreviaImagen = ref('');
+
 
 // =====================================================
 // FORMULARIO
@@ -771,11 +821,15 @@ const formulario = reactive({
 
   descripcion: '',
 
+  ubicacion: '',
+
   precio: '',
 
   stock: '',
 
   categoria_id: '',
+
+  imagen: '',
 
   usuario_id: '',
 
@@ -959,6 +1013,11 @@ function editarProducto(producto) {
     producto.descripcion ?? '';
 
 
+  formulario.ubicacion =
+
+    producto.ubicacion ?? '';
+
+
   formulario.precio =
 
     producto.precio ?? '';
@@ -972,6 +1031,10 @@ function editarProducto(producto) {
   formulario.categoria_id =
 
     producto.categoria_id ?? '';
+
+  formulario.imagen =
+
+    producto.imagen?? '';
 
 
   formulario.usuario_id =
@@ -1016,6 +1079,8 @@ function limpiarFormulario() {
 
   formulario.descripcion = '';
 
+  formulario.ubicacion = '';
+
   formulario.precio = '';
 
   formulario.stock = '';
@@ -1024,10 +1089,18 @@ function limpiarFormulario() {
 
   formulario.usuario_id = '';
 
+  formulario.imagen = '';
+
 
   productoSeleccionadoId.value = null;
 
   imagenSeleccionada.value = null;
+
+  if (vistaPreviaImagen.value) {
+    URL.revokeObjectURL(vistaPreviaImagen.value);
+  }
+
+  vistaPreviaImagen.value = '';
 
 
   errorFormulario.value = '';
@@ -1043,16 +1116,56 @@ function limpiarFormulario() {
 
 function seleccionarImagen(evento) {
 
-  const archivo =
+  const archivo = evento.target.files?.[0];
 
-    evento.target.files?.[0];
+  if (!archivo) {
+    imagenSeleccionada.value = null;
 
+    if (vistaPreviaImagen.value) {
+      URL.revokeObjectURL(vistaPreviaImagen.value);
+    }
 
-  imagenSeleccionada.value =
+    vistaPreviaImagen.value = '';
+    return;
+  }
 
-    archivo || null;
+  const tiposPermitidos = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ];
 
+  if (!tiposPermitidos.includes(archivo.type)) {
+    errorFormulario.value =
+      'Selecciona una imagen JPG, PNG o WEBP.';
+
+    evento.target.value = '';
+    imagenSeleccionada.value = null;
+    return;
+  }
+
+  const limite = 5 * 1024 * 1024;
+
+  if (archivo.size > limite) {
+    errorFormulario.value =
+      'La imagen no puede superar los 5 MB.';
+
+    evento.target.value = '';
+    imagenSeleccionada.value = null;
+    return;
+  }
+
+  errorFormulario.value = '';
+  imagenSeleccionada.value = archivo;
+
+  if (vistaPreviaImagen.value) {
+    URL.revokeObjectURL(vistaPreviaImagen.value);
+  }
+
+  vistaPreviaImagen.value =
+    URL.createObjectURL(archivo);
 }
+
 
 
 // =====================================================
@@ -1175,6 +1288,12 @@ async function guardarProducto() {
       ).trim();
 
 
+      const ubicacion =
+    String(
+        formulario.ubicacion ?? '',
+    ).trim();
+
+
     const precio =
 
       Number(
@@ -1204,29 +1323,29 @@ async function guardarProducto() {
 
     console.log(
 
-      'FORMULARIO ANTES DE ENVIAR:',
+  'FORMULARIO ANTES DE ENVIAR:',
 
-      {
+  {
 
-        nombre,
+    nombre,
 
-        descripcion,
+    descripcion,
 
-        precio,
+    ubicacion,
 
-        stock,
+    precio,
 
-        categoria_id:
+    stock,
 
-          formulario.categoria_id,
+    categoria_id:
+      formulario.categoria_id,
 
-        usuario_id:
+    usuario_id:
+      usuarioId,
 
-          usuarioId,
+  },
 
-      },
-
-    );
+);
 
 
     // =================================================
@@ -1235,45 +1354,41 @@ async function guardarProducto() {
 
     if (modoEdicion.value) {
 
-      const datos = {
+      const datos = new FormData();
 
-        nombre,
-
-        descripcion,
-
-        precio,
-
-        stock,
-
-        categoria_id:
-
-          Number(
-
-            formulario.categoria_id
-
-          ),
-
-        usuario_id:
-
-          usuarioId,
-
-      };
-
-
-      await productoService.actualizarProducto(
-
-        productoSeleccionadoId.value,
-
-        datos,
-
+      datos.append('nombre', nombre);
+      datos.append('descripcion', descripcion);
+      datos.append('ubicacion', ubicacion);
+      datos.append('precio', String(precio));
+      datos.append('stock', String(stock));
+      datos.append(
+        'categoria_id',
+        String(formulario.categoria_id),
       );
 
+      datos.append(
+        'usuario_id',
+        String(usuarioId),
+      );
+
+      if (imagenSeleccionada.value instanceof File) {
+        datos.append(
+          'imagen',
+          imagenSeleccionada.value,
+        );
+      }
+
+      await productoService.actualizarProducto(
+        productoSeleccionadoId.value,
+        datos,
+      );
 
       mensajeFormulario.value =
-
-        'Producto actualizado correctamente.';
-
+        imagenSeleccionada.value instanceof File
+          ? 'Producto e imagen actualizados correctamente.'
+          : 'Producto actualizado correctamente.';
     }
+
 
 
     // =================================================
@@ -1303,6 +1418,12 @@ async function guardarProducto() {
         descripcion,
 
       );
+
+
+    datos.append(
+    'ubicacion',
+    ubicacion,
+);
 
 
       datos.append(

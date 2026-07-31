@@ -158,6 +158,7 @@ router.get(
 
 router.put(
     '/:id',
+    upload.single('imagen'),
     productosController.actualizarProducto
 );
 

@@ -16,6 +16,7 @@ const Producto = {
                 u.nombre AS vendedor,
                 u.telefono,
                 c.nombre AS categoria_nombre
+                
             FROM productos p
             INNER JOIN usuarios u
                 ON p.usuario_id = u.id
@@ -112,12 +113,50 @@ const Producto = {
     // =================================================
 
     actualizar: (
-        id,
-        producto,
-        resultado
-    ) => {
+    id,
+    producto,
+    resultado
+) => {
 
-        const sql = `
+    let sql;
+    let valores;
+
+
+    if (producto.imagen) {
+
+        sql = `
+            UPDATE productos
+            SET
+                nombre = ?,
+                descripcion = ?,
+                ubicacion = ?,
+                precio = ?,
+                stock = ?,
+                categoria_id = ?,
+                imagen = ?
+            WHERE id = ?
+            AND usuario_id = ?
+        `;
+
+
+        valores = [
+
+            producto.nombre,
+            producto.descripcion,
+            producto.ubicacion,
+            producto.precio,
+            producto.stock,
+            producto.categoria_id,
+            producto.imagen,
+            id,
+            producto.usuario_id
+
+        ];
+
+
+    } else {
+
+        sql = `
             UPDATE productos
             SET
                 nombre = ?,
@@ -130,22 +169,30 @@ const Producto = {
             AND usuario_id = ?
         `;
 
-        conexion.query(
-            sql,
-            [
-                producto.nombre,
-                producto.descripcion,
-                producto.ubicacion,
-                producto.precio,
-                producto.stock,
-                producto.categoria_id,
-                id,
-                producto.usuario_id
-            ],
-            resultado
-        );
 
-    },
+        valores = [
+
+            producto.nombre,
+            producto.descripcion,
+            producto.ubicacion,
+            producto.precio,
+            producto.stock,
+            producto.categoria_id,
+            id,
+            producto.usuario_id
+
+        ];
+
+    }
+
+
+    conexion.query(
+        sql,
+        valores,
+        resultado
+    );
+
+},
 
 
     // =================================================
