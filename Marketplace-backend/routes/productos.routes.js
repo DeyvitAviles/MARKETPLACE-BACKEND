@@ -89,34 +89,46 @@ const upload = multer({
     },
 
     fileFilter: function (
-        req,
-        file,
-        cb
+    req,
+    file,
+    cb
+) {
+
+    const extensionesPermitidas = [
+        '.jpg',
+        '.jpeg',
+        '.png',
+        '.webp',
+        '.gif'
+    ];
+
+    const extension =
+        path.extname(
+            file.originalname
+        ).toLowerCase();
+
+
+    if (
+        !extensionesPermitidas.includes(
+            extension
+        )
     ) {
-        const tiposPermitidos = [
-            'image/jpeg',
-            'image/png',
-            'image/webp',
-            'image/gif'
-        ];
 
-        if (
-            !tiposPermitidos.includes(
-                file.mimetype
+        return cb(
+            new Error(
+                'Solo se permiten imágenes JPG, JPEG, PNG, WEBP o GIF'
             )
-        ) {
-            return cb(
-                new Error(
-                    'Solo se permiten imágenes JPG, PNG, WEBP o GIF'
-                )
-            );
-        }
-
-        cb(
-            null,
-            true
         );
+
     }
+
+
+    cb(
+        null,
+        true
+    );
+
+}
 
 });
 
