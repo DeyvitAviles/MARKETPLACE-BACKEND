@@ -72,7 +72,7 @@ npm start
 El archivo `.env` del proyecto debe contener:
 
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=http://54.157.69.153
 ```
 
 Después ejecuta:
@@ -82,7 +82,7 @@ npm install
 npm run dev
 ```
 
-Abre la dirección que indique Vite, normalmente `http://localhost:5173`.
+Abre la dirección que indique Vite, normalmente `http://54.157.69.153`.
 
 ## Seguridad y compatibilidad
 
