@@ -4,6 +4,6 @@ if not exist node_modules (
   echo Instalando dependencias del backend...
   call npm install
 )
-echo Iniciando backend en http://54.157.69.153
+echo Iniciando backend en http://54.157.69.153:3000
 call npm start
 pause

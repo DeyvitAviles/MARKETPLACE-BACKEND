@@ -5,6 +5,7 @@ logs/
 .env
 .env.*
 !.env.example
+!.env.production
 Marketplace-backend/uploads/*.tmp
 .vscode/
 .idea/
