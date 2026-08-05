@@ -540,7 +540,7 @@ marcarMensajesLeidos: (
 
 
 // =====================================================
-// CAMBIAR ESTADO DEL USUARIO 111111111
+// CAMBIAR ESTADO DEL USUARIO
 // =====================================================
 
 actualizarEstadoUsuario: (

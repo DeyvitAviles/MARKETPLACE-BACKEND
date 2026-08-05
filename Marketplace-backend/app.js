@@ -42,4 +42,4 @@ const io = new Server(server, { cors: { origin: allowedOrigins.includes('*') ? '
 require('./socket/chat.socket')(io, require('./models/Chat'));
 
 const PORT = Number(process.env.PORT || 3000);
-server.listen(PORT, '0.0.0.0', () => console.log(`Servidor ejecutándose en el puerto ${PORT}`));
+server.listen(PORT, () => console.log(`Servidor ejecutándose en http://localhost:${PORT}`));
