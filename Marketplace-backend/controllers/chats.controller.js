@@ -9,15 +9,9 @@ require('../models/Chat');
 exports.crearConversacion =
 (req, res) => {
 
-    const {
+    let { usuario1_id, usuario2_id, producto_id } = req.body;
 
-        usuario1_id,
-
-        usuario2_id,
-
-        producto_id
-
-    } = req.body;
+    if (req.usuario) usuario1_id = req.usuario.id;
 
 
     if (
@@ -100,7 +94,7 @@ exports.obtenerConversaciones =
 (req, res) => {
 
     const usuario_id =
-        req.params.usuario_id;
+        req.usuario?.id || req.params.usuario_id;
 
 
     Chat.obtenerConversaciones(
@@ -217,15 +211,9 @@ exports.obtenerConversacion =
 exports.enviarMensaje =
 (req, res) => {
 
-    const {
+    let { conversacion_id, emisor_id, mensaje } = req.body;
 
-        conversacion_id,
-
-        emisor_id,
-
-        mensaje
-
-    } = req.body;
+    if (req.usuario) emisor_id = req.usuario.id;
 
 
     if (
@@ -323,7 +311,7 @@ exports.enviarImagen =
         req.body.conversacion_id;
 
     const emisor_id =
-        req.body.emisor_id;
+        req.usuario?.id || req.body.emisor_id;
 
 
     if (
@@ -495,7 +483,7 @@ exports.marcarMensajesLeidos =
         req.params.conversacion_id;
 
     const usuario_id =
-        req.body.usuario_id;
+        req.usuario?.id || req.body.usuario_id;
 
 
     if (

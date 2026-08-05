@@ -1,188 +1,33 @@
 const express = require('express');
-const router = express.Router();
-
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const router = express.Router();
+const controller = require('../controllers/productos.controller');
+const { autenticar, autenticacionOpcional, permitirRoles } = require('../middlewares/auth');
 
-const productosController =
-    require('../controllers/productos.controller');
-
-
-// =====================================================
-// CARPETA UPLOADS
-// =====================================================
-
-const carpetaUploads =
-    path.join(
-        __dirname,
-        '..',
-        'uploads'
-    );
-
-if (!fs.existsSync(carpetaUploads)) {
-    fs.mkdirSync(
-        carpetaUploads,
-        {
-            recursive: true
-        }
-    );
-}
-
-
-// =====================================================
-// CONFIGURACIÓN DE MULTER
-// =====================================================
-
+const carpetaUploads = path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(carpetaUploads, { recursive: true });
 const storage = multer.diskStorage({
-
-    destination: function (
-        req,
-        file,
-        cb
-    ) {
-        console.log(
-            'Carpeta de destino:',
-            carpetaUploads
-        );
-
-        cb(
-            null,
-            carpetaUploads
-        );
-    },
-
-    filename: function (
-        req,
-        file,
-        cb
-    ) {
-        const extension =
-            path.extname(
-                file.originalname
-            );
-
-        const nombreArchivo =
-            `${Date.now()}${extension}`;
-
-        console.log(
-            'Archivo que se guardará:',
-            nombreArchivo
-        );
-
-        cb(
-            null,
-            nombreArchivo
-        );
-    }
-
+  destination: (_req, _file, cb) => cb(null, carpetaUploads),
+  filename: (_req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${path.extname(file.originalname).toLowerCase()}`),
 });
-
-
 const upload = multer({
-
-    storage,
-
-    limits: {
-        fileSize:
-            50 * 1024 * 1024
-    },
-
-    fileFilter: function (
-    req,
-    file,
-    cb
-) {
-
-    const extensionesPermitidas = [
-        '.jpg',
-        '.jpeg',
-        '.png',
-        '.webp',
-        '.gif'
-    ];
-
-    const extension =
-        path.extname(
-            file.originalname
-        ).toLowerCase();
-
-
-    if (
-        !extensionesPermitidas.includes(
-            extension
-        )
-    ) {
-
-        return cb(
-            new Error(
-                'Solo se permiten imágenes JPG, JPEG, PNG, WEBP o GIF'
-            )
-        );
-
-    }
-
-
-    cb(
-        null,
-        true
-    );
-
-}
-
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    cb(permitidos.includes(file.mimetype) ? null : new Error('Solo se permiten imágenes JPG, PNG, WEBP o GIF'), permitidos.includes(file.mimetype));
+  },
 });
 
-
-// =====================================================
-// LISTAR TODOS LOS PRODUCTOS
-// =====================================================
-
-router.get(
-    '/',
-    productosController.listarProductos
-);
-
-
-// =====================================================
-// CREAR PRODUCTO
-// =====================================================
-
-router.post(
-    '/',
-    upload.single('imagen'),
-    productosController.crearProducto
-);
-
-
-// =====================================================
-// PRODUCTOS POR USUARIO
-// =====================================================
-
-router.get(
-    '/usuario/:usuario_id',
-    productosController.productosPorUsuario
-);
-
-
-// =====================================================
-// ACTUALIZAR PRODUCTO
-// =====================================================
-
-router.put(
-    '/:id',
-    upload.single('imagen'),
-    productosController.actualizarProducto
-);
-
-
-// =====================================================
-// ELIMINAR PRODUCTO
-// =====================================================
-
-router.delete(
-    '/:id',
-    productosController.eliminarProducto
-);
-
+router.get('/', controller.listarProductos);
+router.post('/', autenticacionOpcional, upload.single('imagen'), controller.crearProducto);
+router.get('/usuario/:usuario_id', controller.productosPorUsuario);
+router.put('/admin/:id', autenticar, permitirRoles('administrador', 'superadministrador'), upload.single('imagen'), controller.actualizarProductoAdmin);
+router.delete('/admin/:id', autenticar, permitirRoles('administrador', 'superadministrador'), controller.eliminarProductoAdmin);
+router.get('/:id', controller.obtenerProducto);
+router.put('/:id', autenticacionOpcional, upload.single('imagen'), controller.actualizarProducto);
+router.delete('/:id', autenticacionOpcional, controller.eliminarProducto);
 
 module.exports = router;

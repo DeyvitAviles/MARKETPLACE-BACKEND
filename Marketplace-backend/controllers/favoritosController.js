@@ -14,7 +14,7 @@ exports.agregarFavorito = (req, res) => {
 } = req.body || {};
 
 const usuarioId =
-    Number(usuario_id);
+    Number(req.usuario?.id || usuario_id);
 
 const productoId =
     Number(producto_id);
@@ -130,7 +130,7 @@ const productoId =
 exports.obtenerFavoritosUsuario = (req, res) => {
 
     const usuarioId =
-        Number(req.params.usuario_id);
+        Number(req.usuario?.id || req.params.usuario_id);
 
 
     if (
@@ -189,7 +189,7 @@ exports.obtenerFavoritosUsuario = (req, res) => {
 exports.verificarFavorito = (req, res) => {
 
     const usuarioId =
-        Number(req.params.usuario_id);
+        Number(req.usuario?.id || req.params.usuario_id);
 
     const productoId =
         Number(req.params.producto_id);
@@ -274,7 +274,7 @@ exports.verificarFavorito = (req, res) => {
 exports.eliminarFavorito = (req, res) => {
 
     const usuarioId =
-        Number(req.params.usuario_id);
+        Number(req.usuario?.id || req.params.usuario_id);
 
     const productoId =
         Number(req.params.producto_id);

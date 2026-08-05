@@ -1,21 +1,13 @@
 <template>
-  <div class="conversaciones">
-    <h1>Conversaciones</h1>
-  </div>
+  <section>
+    <div class="mb-6"><h2 class="text-2xl font-black">Moderación de conversaciones</h2><p class="text-sm text-slate-500">Consulta los chats. Solo el superadministrador puede eliminarlos.</p></div>
+    <p v-if="mensaje" :class="esError?'alert-error':'alert-success'" class="mb-4">{{ mensaje }}</p>
+    <div class="card grid min-h-[620px] overflow-hidden xl:grid-cols-[420px_1fr]">
+      <aside class="border-b xl:border-b-0 xl:border-r"><div class="border-b p-4"><button class="btn btn-secondary w-full" @click="cargar">Actualizar</button></div><div class="max-h-[560px] overflow-y-auto"><button v-for="c in conversaciones" :key="c.id" class="block w-full border-b p-4 text-left hover:bg-slate-50" :class="detalle?.conversacion?.id===c.id?'bg-blue-50':''" @click="abrir(c)"><div class="flex justify-between gap-2"><strong class="text-sm">{{ c.usuario1 }} ↔ {{ c.usuario2 }}</strong><span class="badge badge-blue">{{ c.mensajes }}</span></div><p class="mt-1 text-xs font-bold text-blue-700">{{ c.producto }}</p><p class="mt-1 text-xs text-slate-500">{{ fecha(c.ultima_actividad||c.fecha_creacion) }}</p></button><div v-if="!conversaciones.length" class="p-8 text-center text-slate-500">No hay conversaciones.</div></div></aside>
+      <div v-if="detalle" class="flex flex-col"><header class="flex items-center justify-between gap-3 border-b p-4"><div><strong>{{ detalle.conversacion.usuario1 }} ↔ {{ detalle.conversacion.usuario2 }}</strong><p class="text-xs text-slate-500">{{ detalle.conversacion.producto }}</p></div><button v-if="esSuper" class="btn btn-danger btn-sm" @click="eliminar">Eliminar conversación</button></header><div class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4"><div v-for="m in detalle.mensajes" :key="m.id" class="rounded-2xl bg-white p-4 shadow-sm"><div class="flex justify-between gap-3"><strong class="text-sm">{{ m.emisor }}</strong><span class="text-xs text-slate-400">{{ fecha(m.fecha) }}</span></div><p v-if="m.tipo!=='imagen'" class="mt-2 text-sm text-slate-700">{{ m.mensaje }}</p><img v-else :src="apiAsset(m.imagen)" class="mt-2 max-h-80 rounded-xl" /></div><p v-if="!detalle.mensajes.length" class="pt-20 text-center text-slate-500">Esta conversación no tiene mensajes.</p></div></div><div v-else class="grid min-h-[500px] place-items-center p-8 text-slate-500">Selecciona una conversación.</div>
+    </div>
+  </section>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
-
-const conversaciones = ref([])
-
-onMounted(() => {
-  console.log('Vista cargada')
-})
+import{onMounted,ref}from'vue';import authService from'../services/authService.js';import adminService from'../services/adminService.js';import{apiAsset}from'../services/api.js';const esSuper=authService.esSuperadmin();const conversaciones=ref([]),detalle=ref(null),mensaje=ref(''),esError=ref(false);function fecha(v){return v?new Date(v).toLocaleString('es-PE'):'';}async function cargar(){try{conversaciones.value=await adminService.conversaciones();}catch(e){mensaje.value=e.response?.data?.mensaje||'No se pudo cargar';esError.value=true;}}async function abrir(c){try{detalle.value=await adminService.detalleConversacion(c.id);}catch(e){mensaje.value=e.response?.data?.mensaje||'No se pudo abrir';esError.value=true;}}async function eliminar(){if(!confirm('¿Eliminar toda la conversación y sus mensajes?'))return;try{await adminService.eliminarConversacion(detalle.value.conversacion.id);detalle.value=null;mensaje.value='Conversación eliminada';esError.value=false;await cargar();}catch(e){mensaje.value=e.response?.data?.mensaje||'No se pudo eliminar';esError.value=true;}}onMounted(cargar);
 </script>
-
-<style scoped>
-.conversaciones {
-  padding: 24px;
-}
-</style>

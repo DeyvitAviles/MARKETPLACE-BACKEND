@@ -1,0 +1,30 @@
+MARKETCHAT PROFESIONAL - GUIA RAPIDA
+====================================
+
+1. Abre XAMPP e inicia MySQL. Apache es necesario para utilizar phpMyAdmin.
+
+2. En phpMyAdmin selecciona la base de datos marketplace y ejecuta:
+   Marketplace-backend\database\migracion_superadministrador.sql
+
+3. Verifica la configuracion de:
+   Marketplace-backend\.env
+
+4. Haz doble clic en:
+   INICIAR_TODO.bat
+
+5. Abre en el navegador:
+   http://localhost:5173
+
+SUPERADMINISTRADOR
+------------------
+La migracion asigna el rol superadministrador al usuario con ID 1.
+Cambia el ID en el archivo SQL antes de ejecutarlo si tu cuenta principal tiene otro ID.
+
+CARPETAS QUE NO DEBES COPIAR NI ENVIAR
+--------------------------------------
+node_modules
+.git
+dist
+build
+
+En caso de error, revisa README.md para ver la configuracion completa.

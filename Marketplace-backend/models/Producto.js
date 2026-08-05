@@ -1,293 +1,64 @@
-const conexion =
-    require('../config/database');
+const conexion = require('../config/database');
 
+const SELECT_BASE = `
+  SELECT p.*, u.nombre AS vendedor, u.telefono,
+    c.nombre AS categoria_nombre,
+    (SELECT COUNT(*) FROM favoritos f WHERE f.producto_id = p.id) AS cantidad_favoritos
+  FROM productos p
+  INNER JOIN usuarios u ON p.usuario_id = u.id
+  LEFT JOIN categorias c ON p.categoria_id = c.id
+`;
 
 const Producto = {
+  obtenerTodos(resultado) {
+    conexion.query(`${SELECT_BASE} ORDER BY p.fecha_publicacion DESC`, resultado);
+  },
 
-    // =================================================
-    // OBTENER TODOS LOS PRODUCTOS
-    // =================================================
+  obtenerPorId(id, resultado) {
+    conexion.query(`${SELECT_BASE} WHERE p.id = ? LIMIT 1`, [id], resultado);
+  },
 
-    obtenerTodos: (resultado) => {
+  crear(producto, resultado) {
+    conexion.query(`
+      INSERT INTO productos
+      (nombre, descripcion, ubicacion, precio, stock, categoria_id, imagen, usuario_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [producto.nombre, producto.descripcion, producto.ubicacion, producto.precio, producto.stock, producto.categoria_id, producto.imagen, producto.usuario_id], resultado);
+  },
 
-        const sql = `
-            SELECT
-                p.*,
-                u.nombre AS vendedor,
-                u.telefono,
-                c.nombre AS categoria_nombre
-                
-            FROM productos p
-            INNER JOIN usuarios u
-                ON p.usuario_id = u.id
-            LEFT JOIN categorias c
-                ON p.categoria_id = c.id
-            ORDER BY p.fecha_publicacion DESC
-        `;
+  obtenerPorUsuario(usuarioId, resultado) {
+    conexion.query(`${SELECT_BASE} WHERE p.usuario_id = ? ORDER BY p.fecha_publicacion DESC`, [usuarioId], resultado);
+  },
 
-        conexion.query(
-            sql,
-            resultado
-        );
+  actualizar(id, producto, resultado) {
+    const imagenSql = producto.imagen ? ', imagen = ?' : '';
+    const valores = [producto.nombre, producto.descripcion, producto.ubicacion, producto.precio, producto.stock, producto.categoria_id];
+    if (producto.imagen) valores.push(producto.imagen);
+    valores.push(id, producto.usuario_id);
+    conexion.query(`
+      UPDATE productos SET nombre = ?, descripcion = ?, ubicacion = ?, precio = ?, stock = ?, categoria_id = ?${imagenSql}
+      WHERE id = ? AND usuario_id = ?
+    `, valores, resultado);
+  },
 
-    },
+  eliminar(id, usuarioId, resultado) {
+    conexion.query('DELETE FROM productos WHERE id = ? AND usuario_id = ?', [id, usuarioId], resultado);
+  },
 
+  actualizarAdmin(id, producto, resultado) {
+    const imagenSql = producto.imagen ? ', imagen = ?' : '';
+    const valores = [producto.nombre, producto.descripcion, producto.ubicacion, producto.precio, producto.stock, producto.categoria_id];
+    if (producto.imagen) valores.push(producto.imagen);
+    valores.push(id);
+    conexion.query(`
+      UPDATE productos SET nombre = ?, descripcion = ?, ubicacion = ?, precio = ?, stock = ?, categoria_id = ?${imagenSql}
+      WHERE id = ?
+    `, valores, resultado);
+  },
 
-    // =================================================
-    // CREAR PRODUCTO
-    // =================================================
-
-    crear: (
-        producto,
-        resultado
-    ) => {
-
-        const sql = `
-            INSERT INTO productos
-            (
-                nombre,
-                descripcion,
-                ubicacion,
-                precio,
-                stock,
-                categoria_id,
-                imagen,
-                usuario_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        conexion.query(
-            sql,
-            [
-                producto.nombre,
-                producto.descripcion,
-                producto.ubicacion,
-                producto.precio,
-                producto.stock,
-                producto.categoria_id,
-                producto.imagen,
-                producto.usuario_id
-            ],
-            resultado
-        );
-
-    },
-
-
-    // =================================================
-    // OBTENER PRODUCTOS POR USUARIO
-    // =================================================
-
-    obtenerPorUsuario: (
-        usuarioId,
-        resultado
-    ) => {
-
-        const sql = `
-            SELECT
-                p.*,
-                u.nombre AS vendedor,
-                u.telefono,
-                c.nombre AS categoria_nombre
-            FROM productos p
-            INNER JOIN usuarios u
-                ON p.usuario_id = u.id
-            LEFT JOIN categorias c
-                ON p.categoria_id = c.id
-            WHERE p.usuario_id = ?
-            ORDER BY p.fecha_publicacion DESC
-        `;
-
-        conexion.query(
-            sql,
-            [usuarioId],
-            resultado
-        );
-
-    },
-
-
-    // =================================================
-    // ACTUALIZAR PRODUCTO DEL PROPIETARIO
-    // =================================================
-
-    actualizar: (
-    id,
-    producto,
-    resultado
-) => {
-
-    let sql;
-    let valores;
-
-
-    if (producto.imagen) {
-
-        sql = `
-            UPDATE productos
-            SET
-                nombre = ?,
-                descripcion = ?,
-                ubicacion = ?,
-                precio = ?,
-                stock = ?,
-                categoria_id = ?,
-                imagen = ?
-            WHERE id = ?
-            AND usuario_id = ?
-        `;
-
-
-        valores = [
-
-            producto.nombre,
-            producto.descripcion,
-            producto.ubicacion,
-            producto.precio,
-            producto.stock,
-            producto.categoria_id,
-            producto.imagen,
-            id,
-            producto.usuario_id
-
-        ];
-
-
-    } else {
-
-        sql = `
-            UPDATE productos
-            SET
-                nombre = ?,
-                descripcion = ?,
-                ubicacion = ?,
-                precio = ?,
-                stock = ?,
-                categoria_id = ?
-            WHERE id = ?
-            AND usuario_id = ?
-        `;
-
-
-        valores = [
-
-            producto.nombre,
-            producto.descripcion,
-            producto.ubicacion,
-            producto.precio,
-            producto.stock,
-            producto.categoria_id,
-            id,
-            producto.usuario_id
-
-        ];
-
-    }
-
-
-    conexion.query(
-        sql,
-        valores,
-        resultado
-    );
-
-},
-
-
-    // =================================================
-    // ELIMINAR PRODUCTO DEL PROPIETARIO
-    // =================================================
-
-    eliminar: (
-        id,
-        usuarioId,
-        resultado
-    ) => {
-
-        const sql = `
-            DELETE FROM productos
-            WHERE id = ?
-            AND usuario_id = ?
-        `;
-
-        conexion.query(
-            sql,
-            [
-                id,
-                usuarioId
-            ],
-            resultado
-        );
-
-    },
-
-
-    // =================================================
-    // ADMINISTRADOR: ACTUALIZAR CUALQUIER PRODUCTO
-    // No cambia el propietario
-    // =================================================
-
-    actualizarAdmin: (
-        id,
-        producto,
-        resultado
-    ) => {
-
-        const sql = `
-            UPDATE productos
-            SET
-                nombre = ?,
-                descripcion = ?,
-                ubicacion = ?,
-                precio = ?,
-                stock = ?,
-                categoria_id = ?
-            WHERE id = ?
-        `;
-
-        conexion.query(
-            sql,
-            [
-                producto.nombre,
-                producto.descripcion,
-                producto.ubicacion,
-                producto.precio,
-                producto.stock,
-                producto.categoria_id,
-                id
-            ],
-            resultado
-        );
-
-    },
-
-
-    // =================================================
-    // ADMINISTRADOR: ELIMINAR CUALQUIER PRODUCTO
-    // =================================================
-
-    eliminarAdmin: (
-        id,
-        resultado
-    ) => {
-
-        const sql = `
-            DELETE FROM productos
-            WHERE id = ?
-        `;
-
-        conexion.query(
-            sql,
-            [id],
-            resultado
-        );
-
-    }
-
-
+  eliminarAdmin(id, resultado) {
+    conexion.query('DELETE FROM productos WHERE id = ?', [id], resultado);
+  },
 };
 
-
-module.exports =
-    Producto;
+module.exports = Producto;

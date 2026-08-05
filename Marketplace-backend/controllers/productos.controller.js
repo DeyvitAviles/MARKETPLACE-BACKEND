@@ -1,766 +1,109 @@
+const Producto = require('../models/Producto');
 
-const Producto =
-    require('../models/Producto');
+function validarProducto(body) {
+  const nombre = String(body.nombre || '').trim();
+  const descripcion = String(body.descripcion || '').trim();
+  const ubicacion = String(body.ubicacion || '').trim();
+  const precio = Number(String(body.precio ?? '').replace(',', '.'));
+  const stock = Number(body.stock);
+  const categoria_id = Number(body.categoria_id);
+  if (!nombre || !descripcion || !ubicacion || !Number.isFinite(precio) || precio <= 0 || !Number.isFinite(stock) || stock < 0 || !Number.isInteger(categoria_id) || categoria_id <= 0) {
+    return { error: 'Completa correctamente todos los campos del producto' };
+  }
+  return { nombre, descripcion, ubicacion, precio, stock, categoria_id };
+}
 
-
-// =====================================================
-// LISTAR TODOS LOS PRODUCTOS
-// =====================================================
+function manejarError(res, error, mensaje) {
+  console.error(mensaje, error);
+  if (error?.code === 'ER_ROW_IS_REFERENCED_2') return res.status(409).json({ mensaje: 'No se puede eliminar porque existen datos relacionados' });
+  if (error?.code === 'ER_NO_REFERENCED_ROW_2') return res.status(404).json({ mensaje: 'El usuario o la categoría no existe' });
+  return res.status(500).json({ mensaje });
+}
 
 exports.listarProductos = (req, res) => {
-
-    Producto.obtenerTodos(
-        (error, datos) => {
-
-            if (error) {
-
-                console.error(
-                    'Error listando productos:',
-                    error
-                );
-
-                return res.status(500).json({
-
-                    mensaje:
-                        'Error al obtener los productos',
-
-                    error:
-                        error.message
-
-                });
-
-            }
-
-            return res.status(200).json(
-                datos
-            );
-
-        }
-    );
-
+  Producto.obtenerTodos((error, datos) => {
+    if (error) return manejarError(res, error, 'No se pudieron cargar los productos');
+    res.json(datos);
+  });
 };
 
-
-// =====================================================
-// CREAR PRODUCTO
-// =====================================================
+exports.obtenerProducto = (req, res) => {
+  Producto.obtenerPorId(Number(req.params.id), (error, datos) => {
+    if (error) return manejarError(res, error, 'No se pudo cargar el producto');
+    if (!datos.length) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    res.json(datos[0]);
+  });
+};
 
 exports.crearProducto = (req, res) => {
-
-    console.log(
-        'BODY RECIBIDO:',
-        req.body
-    );
-
-    console.log(
-        'ARCHIVO RECIBIDO:',
-        req.file
-    );
-
-
-    const {
-        nombre,
-        descripcion,
-        ubicacion,
-        precio,
-        stock,
-        categoria_id,
-        usuario_id
-    } = req.body;
-
-
-
-    // =================================================
-    // VALIDAR CAMPOS
-    // =================================================
-
-    if (
-        !nombre ||
-        !descripcion ||
-        !ubicacion ||
-        precio === undefined ||
-        stock === undefined ||
-        !categoria_id
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'Faltan campos obligatorios',
-
-            recibido:
-                req.body
-
-        });
-
-    }
-
-
-
-    // =================================================
-    // CONVERTIR DATOS
-    // =================================================
-
-    const precioNumero =
-        Number(
-            String(precio)
-                .replace(',', '.')
-                .trim()
-        );
-
-
-    const stockNumero =
-        Number(stock);
-
-
-    const categoriaIdNumero =
-        Number(categoria_id);
-
-
-
-    const usuarioIdNumero =
-        Number(usuario_id);
-
-
-
-    // =================================================
-    // VALIDAR PRECIO
-    // =================================================
-
-    if (
-        Number.isNaN(precioNumero) ||
-        precioNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El precio no es válido'
-
-        });
-
-    }
-
-
-
-    // =================================================
-    // VALIDAR STOCK
-    // =================================================
-
-    if (
-        Number.isNaN(stockNumero) ||
-        stockNumero < 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El stock no es válido'
-
-        });
-
-    }
-
-
-
-    // =================================================
-    // VALIDAR CATEGORIA
-    // =================================================
-
-    if (
-        Number.isNaN(categoriaIdNumero) ||
-        categoriaIdNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'La categoría no es válida'
-
-        });
-
-    }
-
-
-
-    // =================================================
-    // VALIDAR USUARIO
-    // =================================================
-
-    if (
-        Number.isNaN(usuarioIdNumero) ||
-        usuarioIdNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El usuario no es válido'
-
-        });
-
-    }
-
-
-
-    // =================================================
-    // CREAR OBJETO PRODUCTO
-    // =================================================
-
-const producto = {
-
-    nombre:
-        nombre.trim(),
-
-    descripcion:
-        descripcion.trim(),
-
-    ubicacion:
-        ubicacion.trim(),
-
-    precio:
-        precioNumero,
-
-    stock:
-        stockNumero,
-
-    categoria_id:
-        categoriaIdNumero,
-
-    usuario_id:
-        usuarioIdNumero,
-
-    imagen:
-        req.file
-            ? `/uploads/${req.file.filename}`
-            : null
-
+  const validado = validarProducto(req.body);
+  if (validado.error) return res.status(400).json({ mensaje: validado.error });
+  const usuario_id = Number(req.usuario?.id || req.body.usuario_id);
+  if (!Number.isInteger(usuario_id) || usuario_id <= 0) return res.status(400).json({ mensaje: 'El usuario no es válido' });
+  Producto.crear({
+    ...validado,
+    usuario_id,
+    imagen: req.file ? `/uploads/${req.file.filename}` : '',
+  }, (error, resultado) => {
+    if (error) return manejarError(res, error, 'No se pudo crear el producto');
+    res.status(201).json({ mensaje: 'Producto creado correctamente', id: resultado.insertId });
+  });
 };
-
-
-
-    console.log(
-        'PRODUCTO A GUARDAR:',
-        producto
-    );
-
-
-
-    // =================================================
-    // GUARDAR
-    // =================================================
-
-    Producto.crear(
-
-        producto,
-
-        (error, resultado) => {
-
-
-            if (error) {
-
-                console.error(
-                    'Error creando producto:',
-                    error
-                );
-
-
-                return res.status(500).json({
-
-                    mensaje:
-                        'No se pudo crear el producto',
-
-                    error:
-                        error.message
-
-                });
-
-            }
-
-
-
-            return res.status(201).json({
-
-                mensaje:
-                    'Producto creado correctamente',
-
-                id:
-                    resultado.insertId,
-
-                imagen:
-                    producto.imagen
-
-            });
-
-
-        }
-
-    );
-
-
-};
-
-// =====================================================
-// PRODUCTOS POR USUARIO
-// =====================================================
 
 exports.productosPorUsuario = (req, res) => {
-
-    const usuarioId =
-        Number(req.params.usuario_id);
-
-
-    console.log(
-        'Buscando productos del usuario:',
-        usuarioId
-    );
-
-
-    if (
-        Number.isNaN(usuarioId) ||
-        usuarioId <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El usuario no es válido'
-
-        });
-
-    }
-
-
-    Producto.obtenerPorUsuario(
-        usuarioId,
-        (error, datos) => {
-
-            if (error) {
-
-                console.error(
-                    'Error obteniendo productos del usuario:',
-                    error
-                );
-
-                return res.status(500).json({
-
-                    mensaje:
-                        'Error al obtener los productos del usuario',
-
-                    error:
-                        error.message
-
-                });
-
-            }
-
-            return res.status(200).json(
-                datos
-            );
-
-        }
-    );
-
+  const usuarioId = Number(req.params.usuario_id);
+  Producto.obtenerPorUsuario(usuarioId, (error, datos) => {
+    if (error) return manejarError(res, error, 'No se pudieron cargar los productos del usuario');
+    res.json(datos);
+  });
 };
-
-
-// =====================================================
-// ACTUALIZAR PRODUCTO
-// =====================================================
 
 exports.actualizarProducto = (req, res) => {
-
-    const productoId =
-        Number(req.params.id);
-
-
-    const {
-        nombre,
-        descripcion,
-        ubicacion,
-        precio,
-        stock,
-        categoria_id,
-        usuario_id
-    } = req.body;
-
-
-    // =================================================
-    // VALIDAR ID PRODUCTO
-    // =================================================
-
-    if (
-        Number.isNaN(productoId) ||
-        productoId <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El producto no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR USUARIO
-    // =================================================
-
-    if (
-        !usuario_id
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'Falta el usuario propietario del producto'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR CAMPOS
-    // =================================================
-
-    if (
-        !nombre ||
-        !descripcion ||
-        !ubicacion ||
-        precio === undefined ||
-        stock === undefined ||
-        !categoria_id
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'Todos los campos son obligatorios'
-
-        });
-
-    }
-
-
-    // =================================================
-    // CONVERTIR DATOS
-    // =================================================
-
-    const usuarioIdNumero =
-        Number(usuario_id);
-
-
-    const precioNumero =
-        Number(
-            String(precio)
-                .replace(',', '.')
-                .trim()
-        );
-
-
-    const stockNumero =
-        Number(stock);
-
-
-    const categoriaIdNumero =
-        Number(categoria_id);
-
-
-    // =================================================
-    // VALIDAR USUARIO
-    // =================================================
-
-    if (
-        Number.isNaN(usuarioIdNumero) ||
-        usuarioIdNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El usuario no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR PRECIO
-    // =================================================
-
-    if (
-        Number.isNaN(precioNumero) ||
-        precioNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El precio no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR STOCK
-    // =================================================
-
-    if (
-        Number.isNaN(stockNumero) ||
-        stockNumero < 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El stock no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR CATEGORÍA
-    // =================================================
-
-    if (
-        Number.isNaN(categoriaIdNumero) ||
-        categoriaIdNumero <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'La categoría no es válida'
-
-        });
-
-    }
-
-
-    // =================================================
-    // CREAR OBJETO PRODUCTO
-    // =================================================
-
-    const producto = {
-
-    nombre:
-        nombre.trim(),
-
-    descripcion:
-        descripcion.trim(),
-
-    ubicacion:
-        ubicacion.trim(),
-
-    precio:
-        precioNumero,
-
-    stock:
-        stockNumero,
-
-    categoria_id:
-        categoriaIdNumero,
-
-    usuario_id:
-        usuarioIdNumero,
-
-    imagen:
-        req.file
-            ? `/uploads/${req.file.filename}`
-            : null
-
+  const validado = validarProducto(req.body);
+  if (validado.error) return res.status(400).json({ mensaje: validado.error });
+  const productoId = Number(req.params.id);
+  const usuario_id = Number(req.usuario?.id || req.body.usuario_id);
+  if (!Number.isInteger(productoId) || !Number.isInteger(usuario_id)) return res.status(400).json({ mensaje: 'Datos no válidos' });
+  Producto.actualizar(productoId, {
+    ...validado,
+    usuario_id,
+    imagen: req.file ? `/uploads/${req.file.filename}` : null,
+  }, (error, resultado) => {
+    if (error) return manejarError(res, error, 'No se pudo actualizar el producto');
+    if (!resultado.affectedRows) return res.status(404).json({ mensaje: 'El producto no existe o no pertenece al usuario' });
+    res.json({ mensaje: 'Producto actualizado correctamente', id: productoId });
+  });
 };
-
-
-    // =================================================
-    // ACTUALIZAR
-    // =================================================
-
-    Producto.actualizar(
-        productoId,
-        producto,
-        (error, resultado) => {
-
-            if (error) {
-
-                console.error(
-                    'Error actualizando producto:',
-                    error
-                );
-
-                return res.status(500).json({
-
-                    mensaje:
-                        'No se pudo actualizar el producto',
-
-                    error:
-                        error.message
-
-                });
-
-            }
-
-
-            if (
-                !resultado ||
-                resultado.affectedRows === 0
-            ) {
-
-                return res.status(404).json({
-
-                    mensaje:
-                        'El producto no existe o no pertenece al usuario'
-
-                });
-
-            }
-
-
-            return res.status(200).json({
-
-                mensaje:
-                    'Producto actualizado correctamente',
-
-                id:
-                    productoId
-
-            });
-
-        }
-    );
-
-};
-
-
-// =====================================================
-// ELIMINAR PRODUCTO
-// =====================================================
 
 exports.eliminarProducto = (req, res) => {
-
-    const productoId =
-        Number(req.params.id);
-
-
-    const usuarioId =
-        Number(req.body.usuario_id);
-
-
-    // =================================================
-    // VALIDAR PRODUCTO
-    // =================================================
-
-    if (
-        Number.isNaN(productoId) ||
-        productoId <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El producto no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // VALIDAR USUARIO
-    // =================================================
-
-    if (
-        Number.isNaN(usuarioId) ||
-        usuarioId <= 0
-    ) {
-
-        return res.status(400).json({
-
-            mensaje:
-                'El usuario no es válido'
-
-        });
-
-    }
-
-
-    // =================================================
-    // ELIMINAR
-    // =================================================
-
-    Producto.eliminar(
-        productoId,
-        usuarioId,
-        (error, resultado) => {
-
-            if (error) {
-
-                console.error(
-                    'Error eliminando producto:',
-                    error
-                );
-
-
-                if (
-                    error.code ===
-                    'ER_ROW_IS_REFERENCED_2'
-                ) {
-
-                    return res.status(409).json({
-
-                        mensaje:
-                            'No se puede eliminar el producto porque tiene conversaciones relacionadas'
-
-                    });
-
-                }
-
-
-                return res.status(500).json({
-
-                    mensaje:
-                        'No se pudo eliminar el producto',
-
-                    error:
-                        error.message
-
-                });
-
-            }
-
-
-            if (
-                !resultado ||
-                resultado.affectedRows === 0
-            ) {
-
-                return res.status(404).json({
-
-                    mensaje:
-                        'El producto no existe o no pertenece al usuario'
-
-                });
-
-            }
-
-
-            return res.status(200).json({
-
-                mensaje:
-                    'Producto eliminado correctamente'
-
-            });
-
-        }
-    );
-
+  const productoId = Number(req.params.id);
+  const usuarioId = Number(req.usuario?.id || req.body?.usuario_id);
+  if (!Number.isInteger(productoId) || !Number.isInteger(usuarioId)) return res.status(400).json({ mensaje: 'Datos no válidos' });
+  Producto.eliminar(productoId, usuarioId, (error, resultado) => {
+    if (error) return manejarError(res, error, 'No se pudo eliminar el producto');
+    if (!resultado.affectedRows) return res.status(404).json({ mensaje: 'El producto no existe o no pertenece al usuario' });
+    res.json({ mensaje: 'Producto eliminado correctamente' });
+  });
 };
- 
+
+exports.actualizarProductoAdmin = (req, res) => {
+  const validado = validarProducto(req.body);
+  if (validado.error) return res.status(400).json({ mensaje: validado.error });
+  const productoId = Number(req.params.id);
+  Producto.actualizarAdmin(productoId, {
+    ...validado,
+    imagen: req.file ? `/uploads/${req.file.filename}` : null,
+  }, (error, resultado) => {
+    if (error) return manejarError(res, error, 'No se pudo actualizar el producto');
+    if (!resultado.affectedRows) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    res.json({ mensaje: 'Producto actualizado por administración' });
+  });
+};
+
+exports.eliminarProductoAdmin = (req, res) => {
+  Producto.eliminarAdmin(Number(req.params.id), (error, resultado) => {
+    if (error) return manejarError(res, error, 'No se pudo eliminar el producto');
+    if (!resultado.affectedRows) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    res.json({ mensaje: 'Producto eliminado por administración' });
+  });
+};

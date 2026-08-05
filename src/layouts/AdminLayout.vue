@@ -1,308 +1,44 @@
 <template>
-  <div class="admin-layout">
-    <aside class="sidebar">
-      <div class="marca">
-        <div class="logo">M</div>
-
-        <div>
-          <h2>MarketChat</h2>
-          <span>Administrador</span>
-        </div>
+  <div class="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[260px_1fr]">
+    <aside class="border-b border-slate-800 bg-slate-950 text-white lg:min-h-screen lg:border-b-0 lg:border-r">
+      <div class="flex items-center justify-between p-5 lg:block">
+        <RouterLink to="/admin/dashboard" class="flex items-center gap-3">
+          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-xl font-black">M</div>
+          <div><strong class="block">MarketChat</strong><span class="text-xs text-slate-400">{{ etiquetaRol }}</span></div>
+        </RouterLink>
+        <button class="text-sm text-slate-300 lg:hidden" @click="menuAbierto = !menuAbierto">Menú</button>
       </div>
-
-      <nav class="menu">
-        <RouterLink
-          to="/dashboard"
-          class="menu-link"
-        >
-          Dashboard
-        </RouterLink>
-
-        <RouterLink
-          to="/usuarios"
-          class="menu-link"
-        >
-          Usuarios
-        </RouterLink>
-
-        <RouterLink
-          to="/productos"
-          class="menu-link"
-        >
-          Productos
-        </RouterLink>
-
-        <RouterLink
-          to="/categorias"
-          class="menu-link"
-        >
-          Categorías
-        </RouterLink>
-
-        <RouterLink
-          to="/conversaciones"
-          class="menu-link"
-        >
-          Conversaciones
-        </RouterLink>
+      <nav :class="['space-y-1 px-4 pb-5 lg:block', menuAbierto ? 'block' : 'hidden']">
+        <RouterLink v-for="item in menu" :key="item.to" :to="item.to" class="admin-nav">{{ item.texto }}</RouterLink>
+        <RouterLink to="/marketplace" class="admin-nav mt-4 border border-slate-700">Volver al marketplace</RouterLink>
+        <button class="admin-nav mt-2 w-full text-left text-red-300" @click="salir">Cerrar sesión</button>
       </nav>
-
-      <button
-        class="boton-salir"
-        @click="cerrarSesion"
-      >
-        Cerrar sesión
-      </button>
     </aside>
-
-    <section class="contenido">
-      <header class="topbar">
-        <div>
-          <h1>{{ tituloActual }}</h1>
-
-          <p>Panel administrativo de MarketChat</p>
-        </div>
-
-        <div class="usuario">
-          <div class="avatar">
-            {{ inicialUsuario }}
-          </div>
-
-          <div>
-            <strong>{{ nombreUsuario }}</strong>
-            <span>Administrador</span>
-          </div>
-        </div>
+    <section class="min-w-0">
+      <header class="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 lg:px-8">
+        <div><h1 class="text-xl font-bold text-slate-900">{{ titulo }}</h1><p class="text-sm text-slate-500">Control administrativo del marketplace</p></div>
+        <div class="text-right"><strong class="block text-sm text-slate-800">{{ usuario?.nombre }}</strong><span class="text-xs text-slate-500">{{ etiquetaRol }}</span></div>
       </header>
-
-      <main class="pagina">
-        <RouterView />
-      </main>
+      <main class="p-4 lg:p-8"><RouterView /></main>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import {
-  RouterLink,
-  RouterView,
-  useRoute,
-  useRouter,
-} from 'vue-router';
-
-const route = useRoute();
-const router = useRouter();
-
-const usuarioGuardado = computed(() => {
-  const usuario = localStorage.getItem('usuario');
-
-  if (!usuario) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(usuario);
-  } catch {
-    return {};
-  }
-});
-
-const nombreUsuario = computed(() => {
-  return (
-    usuarioGuardado.value.nombre ||
-    usuarioGuardado.value.correo ||
-    'Administrador'
-  );
-});
-
-const inicialUsuario = computed(() => {
-  return nombreUsuario.value
-    .charAt(0)
-    .toUpperCase();
-});
-
-const tituloActual = computed(() => {
-  const titulos = {
-    dashboard: 'Dashboard',
-    usuarios: 'Usuarios',
-    productos: 'Productos',
-    categorias: 'Categorías',
-    conversaciones: 'Conversaciones',
-  };
-
-  return titulos[route.name] || 'Administración';
-});
-
-function cerrarSesion() {
-  localStorage.removeItem('usuario');
-
-  router.push('/login');
-}
+import { computed, ref } from 'vue';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import authService from '../services/authService.js';
+const route = useRoute(); const router = useRouter(); const menuAbierto = ref(false);
+const usuario = computed(() => authService.obtenerUsuario());
+const etiquetaRol = computed(() => usuario.value?.rol === 'superadministrador' ? 'Superadministrador' : 'Administrador');
+const titulos = { 'admin-dashboard':'Dashboard', 'admin-usuarios':'Usuarios', 'admin-productos':'Productos', 'admin-categorias':'Categorías', 'admin-conversaciones':'Conversaciones' };
+const titulo = computed(() => titulos[route.name] || 'Administración');
+const menu = [
+  { to:'/admin/dashboard', texto:'Dashboard' },
+  { to:'/admin/usuarios', texto:'Usuarios' },
+  { to:'/admin/productos', texto:'Productos' },
+  { to:'/admin/categorias', texto:'Categorías' },
+  { to:'/admin/conversaciones', texto:'Conversaciones' },
+];
+function salir(){ authService.cerrarSesion(); router.push('/login'); }
 </script>
-
-<style scoped>
-.admin-layout {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  background: #f1f5f9;
-}
-
-.sidebar {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 18px;
-  color: white;
-  background: #0f172a;
-}
-
-.marca {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 8px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.logo {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  font-weight: 800;
-  background: #2563eb;
-  border-radius: 14px;
-}
-
-.marca h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.marca span {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.menu {
-  display: grid;
-  gap: 8px;
-  margin-top: 28px;
-}
-
-.menu-link {
-  padding: 13px 14px;
-  color: #cbd5e1;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: 0.2s;
-}
-
-.menu-link:hover {
-  color: white;
-  background: #1e293b;
-}
-
-.menu-link.router-link-active {
-  color: white;
-  font-weight: 700;
-  background: #2563eb;
-}
-
-.boton-salir {
-  margin-top: auto;
-  padding: 13px;
-  color: white;
-  font-weight: 700;
-  background: #dc2626;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.boton-salir:hover {
-  background: #b91c1c;
-}
-
-.contenido {
-  min-width: 0;
-}
-
-.topbar {
-  min-height: 88px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 28px;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.topbar h1 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 25px;
-}
-
-.topbar p {
-  margin: 4px 0 0;
-  color: #64748b;
-}
-
-.usuario {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.usuario div:last-child {
-  display: grid;
-}
-
-.usuario span {
-  color: #64748b;
-  font-size: 13px;
-}
-
-.avatar {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  color: white;
-  font-weight: 800;
-  background: #2563eb;
-  border-radius: 50%;
-}
-
-.pagina {
-  padding: 28px;
-}
-
-@media (max-width: 850px) {
-  .admin-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    min-height: auto;
-  }
-
-  .menu {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .boton-salir {
-    margin-top: 24px;
-  }
-
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-</style>

@@ -1,188 +1,31 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const router = express.Router();
+const controller = require('../controllers/chats.controller');
+const { autenticacionOpcional } = require('../middlewares/auth');
 
-const router =
-express.Router();
-
-const multer =
-require('multer');
-
-const path =
-require('path');
-
-const chatsController =
-require('../controllers/chats.controller');
-
-// =====================================================
-// CONFIGURACIÓN MULTER
-// =====================================================
-
-const storage =
-multer.diskStorage({
-
-    destination:
-        function (
-            req,
-            file,
-            cb
-        ) {
-
-            cb(
-                null,
-                'uploads/chats'
-            );
-
-        },
-
-    filename:
-        function (
-            req,
-            file,
-            cb
-        ) {
-
-            const extension =
-                path.extname(
-                    file.originalname
-                );
-
-            const nombre =
-                Date.now() +
-                '-' +
-                Math.round(
-                    Math.random() * 100000
-                ) +
-                extension;
-
-            cb(
-                null,
-                nombre
-            );
-
-        }
-
+const carpeta = path.join(__dirname, '..', 'uploads', 'chats');
+fs.mkdirSync(carpeta, { recursive: true });
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, carpeta),
+  filename: (_req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${path.extname(file.originalname).toLowerCase()}`),
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ok = ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype);
+    cb(ok ? null : new Error('Solo se permiten imágenes JPG, PNG o WEBP'), ok);
+  },
 });
 
-
-const upload =
-multer({
-
-    storage:
-
-        storage,
-
-    fileFilter:
-
-        function (
-            req,
-            file,
-            cb
-        ) {
-
-            const permitidos = [
-
-                'image/jpeg',
-
-                'image/png',
-
-                'image/jpg',
-
-                'image/webp'
-
-            ];
-
-            if (
-                permitidos.includes(
-                    file.mimetype
-                )
-            ) {
-
-                cb(
-                    null,
-                    true
-                );
-
-            } else {
-
-                cb(
-                    new Error(
-                        'Solo se permiten imágenes'
-                    )
-                );
-
-            }
-
-        }
-
-});
-
-
-// =====================================================
-// CREAR CONVERSACIÓN
-// =====================================================
-
-router.post(
-'/conversacion',
-chatsController.crearConversacion
-);
-
-// =====================================================
-// OBTENER CONVERSACIONES DEL USUARIO
-// =====================================================
-
-router.get(
-'/usuario/:usuario_id',
-chatsController.obtenerConversaciones
-);
-
-// =====================================================
-// OBTENER UNA CONVERSACIÓN
-// =====================================================
-
-router.get(
-'/conversacion/:id',
-chatsController.obtenerConversacion
-);
-
-// =====================================================
-// ENVIAR MENSAJE DE TEXTO
-// =====================================================
-
-router.post(
-'/mensaje',
-chatsController.enviarMensaje
-);
-
-// =====================================================
-// ENVIAR IMAGEN
-// =====================================================
-
-router.post(
-'/imagen',
-upload.single('imagen'),
-chatsController.enviarImagen
-);
-
-// =====================================================
-// OBTENER MENSAJES
-// =====================================================
-
-router.get(
-'/mensajes/:conversacion_id',
-chatsController.obtenerMensajes
-);
-
-// =====================================================
-// MARCAR MENSAJES COMO LEÍDOS
-// =====================================================
-
-router.put(
-'/mensajes/:conversacion_id/leidos',
-chatsController.marcarMensajesLeidos
-);
-
-// =====================================================
-// EXPORTAR ROUTER
-// =====================================================
-
-module.exports =
-router;
+router.post('/conversacion', autenticacionOpcional, controller.crearConversacion);
+router.get('/usuario/:usuario_id', autenticacionOpcional, controller.obtenerConversaciones);
+router.get('/conversacion/:id', autenticacionOpcional, controller.obtenerConversacion);
+router.post('/mensaje', autenticacionOpcional, controller.enviarMensaje);
+router.post('/imagen', autenticacionOpcional, upload.single('imagen'), controller.enviarImagen);
+router.get('/mensajes/:conversacion_id', autenticacionOpcional, controller.obtenerMensajes);
+router.put('/mensajes/:conversacion_id/leidos', autenticacionOpcional, controller.marcarMensajesLeidos);
+module.exports = router;

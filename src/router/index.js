@@ -1,104 +1,52 @@
-import {
-  createRouter,
-  createWebHistory,
-} from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
+import authService from '../services/authService.js';
 
 import LoginView from '../views/LoginView.vue';
+import RegistroView from '../views/RegistroView.vue';
+import UserLayout from '../layouts/UserLayout.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 
-import DashboardView from '../views/DashboardView.vue';
-import UsuariosView from '../views/UsuariosView.vue';
-import ProductosView from '../views/ProductosView.vue';
-import CategoriasView from '../views/CategoriasView.vue';
-import ConversacionesView from '../views/ConversacionesView.vue';
-
 const routes = [
+  { path: '/', redirect: '/marketplace' },
+  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
+  { path: '/registro', name: 'registro', component: RegistroView, meta: { public: true } },
   {
     path: '/',
-    redirect: '/dashboard',
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginView,
-  },
-  {
-    path: '/',
-    component: AdminLayout,
+    component: UserLayout,
+    meta: { requiresAuth: true },
     children: [
-      {
-        path: 'dashboard',
-        name: 'dashboard',
-        component: DashboardView,
-      },
-      {
-        path: 'usuarios',
-        name: 'usuarios',
-        component: UsuariosView,
-      },
-      {
-        path: 'productos',
-        name: 'productos',
-        component: ProductosView,
-      },
-      {
-        path: 'categorias',
-        name: 'categorias',
-        component: CategoriasView,
-      },
-      {
-        path: 'conversaciones',
-        name: 'conversaciones',
-        component: ConversacionesView,
-      },
+      { path: 'marketplace', name: 'marketplace', component: () => import('../views/MarketplaceView.vue') },
+      { path: 'producto/:id', name: 'producto-detalle', component: () => import('../views/ProductoDetalleView.vue') },
+      { path: 'mis-productos', name: 'mis-productos', component: () => import('../views/MisProductosView.vue') },
+      { path: 'favoritos', name: 'favoritos', component: () => import('../views/FavoritosView.vue') },
+      { path: 'conversaciones', name: 'mis-conversaciones', component: () => import('../views/MisConversacionesView.vue') },
+      { path: 'perfil', name: 'perfil', component: () => import('../views/PerfilView.vue') },
     ],
   },
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/dashboard',
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAuth: true, roles: ['administrador', 'superadministrador'] },
+    children: [
+      { path: '', redirect: '/admin/dashboard' },
+      { path: 'dashboard', name: 'admin-dashboard', component: () => import('../views/DashboardView.vue') },
+      { path: 'usuarios', name: 'admin-usuarios', component: () => import('../views/UsuariosView.vue') },
+      { path: 'productos', name: 'admin-productos', component: () => import('../views/ProductosView.vue') },
+      { path: 'categorias', name: 'admin-categorias', component: () => import('../views/CategoriasView.vue') },
+      { path: 'conversaciones', name: 'admin-conversaciones', component: () => import('../views/ConversacionesView.vue') },
+    ],
   },
+  { path: '/:pathMatch(.*)*', redirect: '/marketplace' },
 ];
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
+const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach((to) => {
-  const usuarioGuardado =
-    localStorage.getItem('usuario');
-
-  let usuario = null;
-
-  try {
-    usuario = usuarioGuardado
-      ? JSON.parse(usuarioGuardado)
-      : null;
-  } catch {
-    localStorage.removeItem('usuario');
-  }
-
-  const esAdministrador =
-    usuario?.rol === 'administrador';
-
-  if (
-    to.name !== 'login' &&
-    !esAdministrador
-  ) {
-    return {
-      name: 'login',
-    };
-  }
-
-  if (
-    to.name === 'login' &&
-    esAdministrador
-  ) {
-    return {
-      name: 'dashboard',
-    };
-  }
-
+  const usuario = authService.obtenerUsuario();
+  const autenticado = authService.estaAutenticado();
+  if (to.meta.requiresAuth && !autenticado) return { name: 'login', query: { redirect: to.fullPath } };
+  if (to.meta.roles && !to.meta.roles.includes(usuario?.rol)) return { name: 'marketplace' };
+  if ((to.name === 'login' || to.name === 'registro') && autenticado) return { name: 'marketplace' };
   return true;
 });
 

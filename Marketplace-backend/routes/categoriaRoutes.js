@@ -1,53 +1,10 @@
 const express = require('express');
-
 const router = express.Router();
+const controller = require('../controllers/categoriaController');
+const { autenticar, permitirRoles } = require('../middlewares/auth');
 
-const categoriaController =
-    require('../controllers/categoriaController');
-
-
-// ==========================================
-// OBTENER CATEGORÍAS
-// GET /categorias
-// ==========================================
-
-router.get(
-    '/',
-    categoriaController.obtenerCategorias
-);
-
-
-// ==========================================
-// CREAR CATEGORÍA
-// POST /categorias
-// ==========================================
-
-router.post(
-    '/',
-    categoriaController.crearCategoria
-);
-
-
-// ==========================================
-// ACTUALIZAR CATEGORÍA
-// PUT /categorias/:id
-// ==========================================
-
-router.put(
-    '/:id',
-    categoriaController.actualizarCategoria
-);
-
-
-// ==========================================
-// ELIMINAR CATEGORÍA
-// DELETE /categorias/:id
-// ==========================================
-
-router.delete(
-    '/:id',
-    categoriaController.eliminarCategoria
-);
-
-
+router.get('/', controller.obtenerCategorias);
+router.post('/', autenticar, permitirRoles('administrador', 'superadministrador'), controller.crearCategoria);
+router.put('/:id', autenticar, permitirRoles('administrador', 'superadministrador'), controller.actualizarCategoria);
+router.delete('/:id', autenticar, permitirRoles('administrador', 'superadministrador'), controller.eliminarCategoria);
 module.exports = router;

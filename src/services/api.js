@@ -1,122 +1,33 @@
 import axios from 'axios';
 
-
 const api = axios.create({
-
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    'http://54.157.69.153:3000',
-
-  timeout: 15000,
-
+  baseURL: import.meta.env.VITE_API_URL || 'http://54.157.69.153',
+  timeout: 20000,
 });
 
-
-
-api.interceptors.request.use(
-
-  (config) => {
-
-    const usuarioGuardado =
-      localStorage.getItem('usuario');
-
-
-    if (!usuarioGuardado) {
-
-      return config;
-
-    }
-
-
-    try {
-
-      const usuario =
-        JSON.parse(
-          usuarioGuardado
-        );
-
-
-      if (usuario?.id) {
-
-        config.headers['usuario-id'] =
-          usuario.id;
-
-      }
-
-
-    } catch {
-
-      localStorage.removeItem('usuario');
-
-    }
-
-
-    return config;
-
-  },
-
-
-  (error) => {
-
-    return Promise.reject(error);
-
-  }
-
-);
-
-
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 api.interceptors.response.use(
-
   (response) => response,
-
-
   (error) => {
-
-    const estado =
-      error.response?.status;
-
-
-    if (
-      estado === 401 ||
-      estado === 403
-    ) {
-
-      const mensaje =
-        error.response?.data?.mensaje || '';
-
-
-      const esErrorPermisos =
-        mensaje.includes('permisos') ||
-        mensaje.includes('administrador') ||
-        mensaje.includes('activa');
-
-
-      if (esErrorPermisos) {
-
-        localStorage.removeItem('usuario');
-
-
-        if (
-          window.location.pathname !== '/login'
-        ) {
-
-          window.location.href =
-            '/login';
-
-        }
-
-      }
-
+    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = '/login';
     }
-
-
     return Promise.reject(error);
-
-  }
-
+  },
 );
 
-
+export function apiAsset(path) {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  const base = String(api.defaults.baseURL || '').replace(/\/$/, '');
+  return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 
 export default api;
