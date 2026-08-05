@@ -56,7 +56,7 @@ DB_PASSWORD=
 DB_NAME=marketplace
 DB_CONNECTION_LIMIT=10
 JWT_SECRET=coloca-una-clave-larga-y-unica
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://54.157.69.153
 ```
 
 Después ejecuta:
