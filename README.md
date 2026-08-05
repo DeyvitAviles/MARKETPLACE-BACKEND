@@ -56,7 +56,7 @@ DB_PASSWORD=
 DB_NAME=marketplace
 DB_CONNECTION_LIMIT=10
 JWT_SECRET=coloca-una-clave-larga-y-unica
-CORS_ORIGIN=http://54.157.69.153
+CORS_ORIGIN=http://54.157.69.153,http://54.157.69.153:5173,http://localhost:5173
 ```
 
 Después ejecuta:
@@ -72,7 +72,7 @@ npm start
 El archivo `.env` del proyecto debe contener:
 
 ```env
-VITE_API_URL=http://54.157.69.153
+VITE_API_URL=http://54.157.69.153:3000
 ```
 
 Después ejecuta:

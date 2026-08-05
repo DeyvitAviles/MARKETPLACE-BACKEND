@@ -1,0 +1,32 @@
+CONFIGURACIÓN APLICADA
+======================
+
+Backend/API pública:
+http://54.157.69.153:3000
+
+Orígenes permitidos por CORS:
+http://54.157.69.153
+http://54.157.69.153:5173
+http://localhost:5173
+
+ARCHIVOS PRINCIPALES MODIFICADOS
+--------------------------------
+- .env
+- .env.production
+- .env.example
+- .gitignore
+- src/services/api.js
+- Marketplace-backend/.env
+- Marketplace-backend/.env.example
+- Marketplace-backend/app.js
+
+DESPUÉS DE COPIAR LOS CAMBIOS
+-----------------------------
+1. Reinicia el backend.
+2. Ejecuta npm install si no existe node_modules.
+3. Ejecuta npm run build en la carpeta Marketplace-vue.
+4. Publica nuevamente dist o despliega desde Git.
+
+NOTA
+----
+Marketplace-backend/.env sigue ignorado por Git por seguridad. Configúralo manualmente en el servidor.
