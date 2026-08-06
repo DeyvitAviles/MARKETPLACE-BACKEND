@@ -12,22 +12,47 @@ const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, carpetaUploads),
   filename: (_req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${path.extname(file.originalname).toLowerCase()}`),
 });
+const extensionesPermitidas = new Set([
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.gif',
+  '.heic',
+  '.heif',
+  '.avif',
+  '.bmp',
+  '.tif',
+  '.tiff',
+]);
+
 const upload = multer({
   storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 8 MB
-  },
-  fileFilter: (_req, file, cb) => {
-    const esImagen = file.mimetype?.startsWith('image/');
 
-    if (!esImagen) {
-      return cb(new Error('Solo se permiten archivos de imagen'));
+  limits: {
+    fileSize: 8 * 1024 * 1024,
+  },
+
+  fileFilter: (_req, file, cb) => {
+    const mime = (file.mimetype || '').toLowerCase();
+    const extension = path
+      .extname(file.originalname || '')
+      .toLowerCase();
+
+    const mimeEsImagen = mime.startsWith('image/');
+    const extensionEsImagen = extensionesPermitidas.has(extension);
+
+    if (!mimeEsImagen && !extensionEsImagen) {
+      return cb(
+        new Error(
+          `Archivo rechazado: ${file.originalname} (${file.mimetype})`
+        )
+      );
     }
 
-    cb(null, true);
+    return cb(null, true);
   },
 });
-
 router.get('/', controller.listarProductos);
 router.post('/', autenticacionOpcional, upload.single('imagen'), controller.crearProducto);
 router.get('/usuario/:usuario_id', controller.productosPorUsuario);
