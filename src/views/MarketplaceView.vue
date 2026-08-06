@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="card mb-6 overflow-hidden bg-gradient-to-r from-blue-700 to-indigo-700 p-6 text-white lg:p-9">
-      <div class="max-w-2xl"><span class="text-sm font-bold text-blue-100">MARKETCHAT WEB</span><h1 class="mt-2 text-3xl font-black lg:text-4xl">Compra, vende y conversa desde cualquier dispositivo</h1><p class="mt-3 text-blue-100">La versión web comparte usuarios, productos, favoritos y conversaciones con tu aplicación Flutter.</p></div>
+      <div class="max-w-2xl"><span class="text-sm font-bold text-blue-100">MARKETCHAT</span><h1 class="mt-2 text-3xl font-black lg:text-4xl">Compra, vende y conversa desde cualquier dispositivo</h1><p class="mt-3 text-blue-100">La aplicacion web y administrativa.</p></div>
     </div>
     <div class="mb-6 grid gap-3 md:grid-cols-[1fr_260px_auto]">
       <input v-model.trim="busqueda" class="input" placeholder="Buscar productos, ubicación o vendedor..." />
@@ -10,7 +10,7 @@
     </div>
     <p v-if="error" class="alert-error mb-4">{{ error }}</p>
     <div v-if="cargando" class="card p-10 text-center text-slate-500">Cargando productos...</div>
-    <div v-else-if="filtrados.length" class="grid gap-5 sm:grid-cols-2 4"><ProductCard v-for="p in filtrados" :key="p.id" :producto="p" /></div>
+    <div v-else-if="filtrados.length" class="grid gap-5 sm:grid-cols-4 4"><ProductCard v-for="p in filtrados" :key="p.id" :producto="p" /></div>
     <div v-else class="card p-10 text-center text-slate-500">No se encontraron productos.</div>
   </section>
 </template>
