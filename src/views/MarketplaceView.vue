@@ -10,7 +10,7 @@
     </div>
     <p v-if="error" class="alert-error mb-4">{{ error }}</p>
     <div v-if="cargando" class="card p-10 text-center text-slate-500">Cargando productos...</div>
-    <div v-else-if="filtrados.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3"><ProductCard v-for="p in filtrados" :key="p.id" :producto="p" /></div>
+    <div v-else-if="filtrados.length" class="grid gap-5 sm:grid-cols-2 4"><ProductCard v-for="p in filtrados" :key="p.id" :producto="p" /></div>
     <div v-else class="card p-10 text-center text-slate-500">No se encontraron productos.</div>
   </section>
 </template>

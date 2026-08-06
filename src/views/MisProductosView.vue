@@ -3,7 +3,7 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 class="text-2xl font-black">Mis productos</h1><p class="text-sm text-slate-500">Publica y administra tus anuncios.</p></div><button class="btn btn-primary" @click="abrirNuevo">+ Publicar producto</button></div>
     <p v-if="mensaje" :class="esError?'alert-error':'alert-success'" class="mb-4">{{ mensaje }}</p>
     <div v-if="cargando" class="card p-10 text-center">Cargando...</div>
-    <div v-else-if="productos.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div v-else-if="productos.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
       <article v-for="p in productos" :key="p.id" class="card overflow-hidden"><img v-if="p.imagen" :src="apiAsset(p.imagen)" class="product-image" /><div v-else class="grid aspect-[4/3] place-items-center bg-slate-200">Sin imagen</div><div class="p-4"><div class="flex justify-between gap-3"><h3 class="font-black">{{ p.nombre }}</h3><strong class="text-blue-700">S/ {{ Number(p.precio).toFixed(2) }}</strong></div><p class="mt-2 line-clamp-2 text-sm text-slate-500">{{ p.descripcion }}</p><div class="mt-4 flex gap-2"><button class="btn btn-secondary flex-1" @click="abrirEditar(p)">Editar</button><button class="btn btn-danger flex-1" @click="eliminar(p)">Eliminar</button></div></div></article>
     </div>
     <div v-else class="card p-10 text-center text-slate-500">Aún no publicaste productos.</div>

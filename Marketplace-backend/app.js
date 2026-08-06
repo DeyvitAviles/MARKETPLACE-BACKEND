@@ -27,6 +27,7 @@ app.use('/chats', require('./routes/chats.routes'));
 app.use('/favoritos', require('./routes/favoritosRoutes'));
 app.use('/categorias', require('./routes/categoriaRoutes'));
 app.use('/admin', require('./routes/admin.routes'));
+app.use('/ia', require('./routes/ia.routes'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (_req, res) => res.json({ mensaje: 'API Marketplace funcionando', version: '2.0' }));

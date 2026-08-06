@@ -3,7 +3,11 @@
     <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
         <RouterLink to="/marketplace" class="flex items-center gap-3">
-          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-xl font-black text-white">M</div>
+          <img
+  src="/logotipoo.png"
+  alt="Logo de MarketChat"
+  class="h-11 w-11 rounded-xl object-contain"
+/>
           <div><strong class="block text-slate-900">MarketChat</strong><span class="text-xs text-slate-500">Marketplace web</span></div>
         </RouterLink>
 
@@ -23,6 +27,7 @@
       </nav>
     </header>
     <main class="mx-auto max-w-7xl p-4 lg:p-6"><RouterView /></main>
+    <AsistenteIA />
   </div>
 </template>
 
@@ -30,6 +35,7 @@
 import { computed } from 'vue';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import authService from '../services/authService.js';
+import AsistenteIA from '../components/AsistenteIA.vue';
 const router = useRouter();
 const usuario = computed(() => authService.obtenerUsuario());
 const esAdmin = computed(() => ['administrador', 'superadministrador'].includes(usuario.value?.rol));

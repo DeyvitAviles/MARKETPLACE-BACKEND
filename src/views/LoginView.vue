@@ -2,7 +2,11 @@
   <main class="grid min-h-screen place-items-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-4">
     <section class="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl sm:p-9">
       <div class="mb-7 text-center">
-        <div class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-600 text-2xl font-black text-white">M</div>
+        <img
+  src="/logotipoo.png"
+  alt="Logo de MarketChat"
+  class="mx-auto h-20 w-20 object-contain"
+/>
         <h1 class="mt-4 text-2xl font-black text-slate-900">Bienvenido a MarketChat</h1>
         <p class="mt-2 text-sm text-slate-500">La misma experiencia de la app, ahora también en la web.</p>
       </div>

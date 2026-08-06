@@ -3,7 +3,11 @@
     <aside class="border-b border-slate-800 bg-slate-950 text-white lg:min-h-screen lg:border-b-0 lg:border-r">
       <div class="flex items-center justify-between p-5 lg:block">
         <RouterLink to="/admin/dashboard" class="flex items-center gap-3">
-          <div class="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-xl font-black">M</div>
+          <img
+  src="/logotipoo.png"
+  alt="Logo de MarketChat"
+  class="h-11 w-11 rounded-xl object-contain"
+/>
           <div><strong class="block">MarketChat</strong><span class="text-xs text-slate-400">{{ etiquetaRol }}</span></div>
         </RouterLink>
         <button class="text-sm text-slate-300 lg:hidden" @click="menuAbierto = !menuAbierto">Menú</button>
