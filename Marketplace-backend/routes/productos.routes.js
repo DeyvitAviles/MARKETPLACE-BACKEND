@@ -14,10 +14,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 8 MB
+  },
   fileFilter: (_req, file, cb) => {
-    const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    cb(permitidos.includes(file.mimetype) ? null : new Error('Solo se permiten imágenes JPG, PNG, WEBP o GIF'), permitidos.includes(file.mimetype));
+    const esImagen = file.mimetype?.startsWith('image/');
+
+    if (!esImagen) {
+      return cb(new Error('Solo se permiten archivos de imagen'));
+    }
+
+    cb(null, true);
   },
 });
 
