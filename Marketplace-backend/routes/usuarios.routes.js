@@ -4,6 +4,7 @@ const controller = require('../controllers/usuarios.controller');
 const { autenticar, autenticacionOpcional, permitirRoles } = require('../middlewares/auth');
 
 router.post('/login', controller.login);
+router.post('/google', controller.loginGoogle);
 router.post('/registro', controller.crearUsuario);
 router.post('/', controller.crearUsuario); // Compatibilidad con Flutter actual
 router.get('/me', autenticar, controller.me);

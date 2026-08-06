@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const Usuario = require('../models/Usuario');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signToken } = require('../utils/token');
+const { verificarFirebaseIdToken } = require('../config/firebase');
 
 function usuarioSeguro(usuario) {
   return {
@@ -80,6 +82,88 @@ exports.login = (req, res) => {
     const token = signToken({ id: seguro.id, rol: seguro.rol });
     res.json({ mensaje: 'Login correcto', usuario: seguro, token });
   });
+};
+
+exports.loginGoogle = async (req, res) => {
+  const idToken = String(req.body?.id_token || '').trim();
+  if (!idToken) {
+    return res.status(400).json({ mensaje: 'El token de Google es obligatorio' });
+  }
+
+  try {
+    const decoded = await verificarFirebaseIdToken(idToken);
+    const correo = String(decoded.email || '').trim().toLowerCase();
+    const nombre = String(decoded.name || correo.split('@')[0] || 'Usuario').trim();
+
+    if (!correo || decoded.email_verified !== true) {
+      return res.status(401).json({ mensaje: 'Google no devolvió un correo verificado' });
+    }
+
+    const encontrados = await new Promise((resolve, reject) => {
+      Usuario.buscarPorCorreo(correo, (error, datos) => {
+        if (error) return reject(error);
+        resolve(datos);
+      });
+    });
+
+    let usuario;
+
+    if (encontrados.length) {
+      usuario = encontrados[0];
+    } else {
+      const passwordAleatoria = crypto.randomBytes(48).toString('hex');
+      const nuevoUsuario = {
+        nombre,
+        correo,
+        password: hashPassword(passwordAleatoria),
+        telefono: '',
+        ubicacion: '',
+        imagen_perfil: decoded.picture || '',
+        rol: 'usuario',
+        activo: 1,
+        estado: 'activo',
+      };
+
+      const resultado = await new Promise((resolve, reject) => {
+        Usuario.crear(nuevoUsuario, (error, datos) => {
+          if (error) return reject(error);
+          resolve(datos);
+        });
+      });
+
+      usuario = {
+        id: resultado.insertId,
+        ...nuevoUsuario,
+      };
+    }
+
+    if (usuario.estado !== 'activo' || Number(usuario.activo) !== 1) {
+      return res.status(403).json({ mensaje: 'La cuenta está bloqueada o inactiva' });
+    }
+
+    const seguro = usuarioSeguro(usuario);
+    const token = signToken({ id: seguro.id, rol: seguro.rol });
+
+    return res.json({
+      mensaje: 'Login con Google correcto',
+      usuario: seguro,
+      token,
+    });
+  } catch (error) {
+    console.error('Error en login con Google:', error.message);
+
+    if (error?.code === 'firebase/token-expirado') {
+      return res.status(401).json({ mensaje: 'La sesión de Google venció. Intenta nuevamente.' });
+    }
+
+    if (error?.code === 'firebase/token-invalido') {
+      return res.status(401).json({ mensaje: 'El token de Google no es válido' });
+    }
+
+    return res.status(503).json({
+      mensaje: 'El inicio de sesión con Google no está configurado en el servidor',
+    });
+  }
 };
 
 exports.me = (req, res) => res.json({ usuario: usuarioSeguro(req.usuario) });
